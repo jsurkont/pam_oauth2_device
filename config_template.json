@@ -10,6 +10,12 @@
         "userinfo_endpoint": "https://provider.com/userinfo",
         "username_attribute": "preferred_username"
     },
+    "remote_auth": {
+        "url": "http://localhost:8000//authorized/?username_remote={user_remote}&username_local={user_local}",
+        "id": "client_id",
+        "secret": "client_secret",
+        "response_ok": "{\"authorization\":true}"
+    },
     "ldap": {
         "host": "ldaps://ldap-server:636",
         "basedn": "basedn",

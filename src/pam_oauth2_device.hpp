@@ -38,4 +38,9 @@ void get_userinfo(const char *userinfo_endpoint,
                   const char *username_attribute,
                   Userinfo *userinfo);
 
+bool check_remote_authentication(const char *url,
+                                 const char *client_id,
+                                 const char *client_secret,
+                                 const char *response_ok);
+
 #endif // PAM_OAUTH2_DEVICE_HPP

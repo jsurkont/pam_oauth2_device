@@ -20,6 +20,13 @@ void Config::load(const char *path)
     userinfo_endpoint = j.at("oauth").at("userinfo_endpoint").get<std::string>();
     username_attribute = j.at("oauth").at("username_attribute").get<std::string>();
     qr_error_correction_level = j.at("qr").at("error_correction_level").get<int>();
+    if (j.find("remote_auth") != j.end())
+    {
+        remote_auth_url = j.at("remote_auth").at("url").get<std::string>();
+        remote_auth_id = j.at("remote_auth").at("id").get<std::string>();
+        remote_auth_secret = j.at("remote_auth").at("secret").get<std::string>();
+        remote_auth_response_ok = j.at("remote_auth").at("response_ok").get<std::string>();
+    }
     if (j.find("ldap") != j.end())
     {
         ldap_host = j.at("ldap").at("host").get<std::string>();

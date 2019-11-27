@@ -286,6 +286,35 @@ void get_userinfo(const char *userinfo_endpoint,
     }
 }
 
+bool check_remote_authentication(const char *url,
+                                 const char *client_id,
+                                 const char *client_secret,
+                                 const char *response_ok)
+{
+    CURL *curl;
+    CURLcode res;
+    std::string readBuffer;
+
+    curl = curl_easy_init();
+    if (!curl)
+        throw NetworkError();
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    if (strlen(client_id) && strlen(client_secret))
+    {
+        curl_easy_setopt(curl, CURLOPT_USERNAME, client_id);
+        curl_easy_setopt(curl, CURLOPT_PASSWORD, client_secret);
+    }
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+    res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+    if (res != CURLE_OK)
+        throw NetworkError();
+    long response_code;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+    return response_code == 200 && strcmp(response_ok, readBuffer.c_str()) == 0;
+}
+
 void show_prompt(pam_handle_t *pamh,
                  int qr_error_correction_level,
                  DeviceAuthResponse *device_auth_response)
@@ -333,6 +362,25 @@ bool is_authorized(Config *config,
         if (config->usermap[username_remote].count(username_local) > 0)
         {
             return true;
+        }
+    }
+
+    // Try to authorize against a remote HTTP endpoint
+    if (!config->remote_auth_url.empty())
+    {
+        std::string remote_auth_url = config->remote_auth_url.replace(
+            config->remote_auth_url.find("{user_remote}"), 13, username_remote);
+        remote_auth_url = config->remote_auth_url.replace(
+            config->remote_auth_url.find("{user_local}"), 12, username_local);
+        try
+        {
+            if (check_remote_authentication(
+                    remote_auth_url.c_str(), config->remote_auth_id.c_str(),
+                    config->remote_auth_secret.c_str(), config->remote_auth_response_ok.c_str()))
+                return true;
+        }
+        catch (NetworkError &e)
+        {
         }
     }
 
